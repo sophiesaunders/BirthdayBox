@@ -51,16 +51,14 @@ BirthdayBox/
 
 ## TODO
 
-- [ ] Dim the person's name once checked off under Today
 - [ ] Automatically re-order the "Today" section so completed ones go to the bottom
 - [ ] Fix weird behavior on macOS with the "e.g." part of the "Notes" when adding a new bday
-- [ ] Commit and push to repo!!
+- [ ] Add an emoji picker option rather than expecting a string
+- [ ] Create a logo / icon, add to the app
 
 ## Future ideas
 
 - [ ] Add the ability to add basic holidays (Mother's Day, Father's Day)
-- [ ] Add an emoji picker option rather than expecting a string
-- [ ] Create a logo / icon, add to the app
 - [ ] Add the ability to give you a reminder ahead of time about an upcoming birthday
 - [ ] Add the ability to add a one-time note, e.g. an idea for their upcoming birthday gift
 - [ ] Add the ability to track "Overdue" birthdays as well (not checked off in time)
@@ -69,5 +67,4 @@ BirthdayBox/
 - [ ] Improve the Month + Date fields for their birthday. Can we make it easier?
 - [ ] Edge cases: Created without day, or without month, or tons of bdays on a day, or long emoji string set, or long name set, deleting a person??
 - [ ] Add some top bar to the widget, or a single emoji rather than per-person, etc.
-- [ ] An "upcoming" birthdays section of the app?
 - [ ] Make notifications configurable in the app!! Could be options for in the morning, and for in the evening (for whatever isn't complete) and you pick the time

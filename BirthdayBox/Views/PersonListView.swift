@@ -36,19 +36,22 @@ struct PersonListView: View {
                                             .foregroundStyle(.secondary)
                                     }
                                 }
-                                Text(dateLabel(for: person))
+                                Text(subtitle(for: person))
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
-                                if let notes = person.notes, !notes.isEmpty {
-                                    Text(notes)
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                        .lineLimit(2)
-                                }
+                                    .lineLimit(1)
+                                    .truncationMode(.tail)
                             }
                         }
                     }
                     .foregroundStyle(.primary)
+                    .contextMenu {
+                        Button(role: .destructive) {
+                            deletePerson(person)
+                        } label: {
+                            Label("Delete", systemImage: "trash")
+                        }
+                    }
                 }
                 .onDelete(perform: delete)
             }
@@ -78,6 +81,12 @@ struct PersonListView: View {
         }
     }
 
+    private func subtitle(for person: Person) -> String {
+        let date = dateLabel(for: person)
+        guard let notes = person.notes, !notes.isEmpty else { return date }
+        return "\(date) · \(notes)"
+    }
+
     private func dateLabel(for person: Person) -> String {
         var components = DateComponents()
         components.month = person.birthMonth
@@ -90,12 +99,31 @@ struct PersonListView: View {
 
     private func delete(at offsets: IndexSet) {
         for index in offsets {
-            let person = sortedByUpcoming[index]
-            NotificationManager.cancelMorningNotification(for: person)
-            NotificationManager.cancelEveningReminder(for: person)
-            modelContext.delete(person)
+            deletePerson(sortedByUpcoming[index])
         }
+    }
+
+    private func deletePerson(_ person: Person) {
+        NotificationManager.cancelMorningNotification(for: person)
+        NotificationManager.cancelEveningReminder(for: person)
+        modelContext.delete(person)
         try? modelContext.save()
         WidgetCenter.shared.reloadAllTimelines()
     }
+}
+
+#Preview {
+    let config = ModelConfiguration(isStoredInMemoryOnly: true)
+    let container = try! ModelContainer(for: Person.self, configurations: config)
+
+    let julia = Person(name: "Julia", birthMonth: 7, birthDay: 6, birthYear: 1990, emoji: "🎂", notes: "Make a card")
+    let annMarie = Person(name: "Ann Marie", birthMonth: 7, birthDay: 7, emoji: "🎂")
+    let noNotes = Person(name: "Chris", birthMonth: 12, birthDay: 25, birthYear: 1985, emoji: "🎄")
+
+    container.mainContext.insert(julia)
+    container.mainContext.insert(annMarie)
+    container.mainContext.insert(noNotes)
+
+    return PersonListView()
+        .modelContainer(container)
 }

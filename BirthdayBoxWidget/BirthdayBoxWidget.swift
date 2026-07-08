@@ -81,69 +81,129 @@ struct BirthdayBoxWidgetView: View {
         .padding(8)
     }
 
-    /// Small widget: just today's first birthday, compact and legible.
-    /// If there's more than one, a small "+N more" hint is added below.
+    /// Small widget: today's birthdays, capped at 5. Row height is computed from the
+    /// worst-case cap (5 rows), not the actual count today — so sizing stays consistent
+    /// whether there's 1 birthday or 5, and rows sit at the top rather than stretching
+    /// to fill (and centering awkwardly) when there are only 1-2 people.
     private var smallLayout: some View {
-        let person = entry.people[0]
-        let extraCount = entry.people.count - 1
+        let displayed = Array(entry.people.prefix(5))
+        let extraCount = entry.people.count - displayed.count
 
-        return VStack(alignment: .leading, spacing: 4) {
-            HStack(spacing: 6) {
-                Text(person.emoji)
-                    .font(.title3)
-                VStack(alignment: .leading, spacing: 1) {
-                    Text(person.name)
-                        .font(.subheadline)
-                        .fontWeight(.semibold)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.6)
-                    if let age = person.turningAge {
-                        Text("Turning \(age)")
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                            .lineLimit(1)
-                    }
-                }
-                Spacer(minLength: 2)
-                Button(intent: ToggleBirthdayIntent(personID: person.id.uuidString)) {
-                    Image(systemName: person.isAcknowledged ? "checkmark.circle.fill" : "circle")
-                        .font(.title3)
-                        .foregroundStyle(person.isAcknowledged ? .green : .secondary)
-                }
-                .buttonStyle(.plain)
-            }
-            if extraCount > 0 {
-                Text("+\(extraCount) more today")
-                    .font(.caption2)
+        return GeometryReader { geo in
+            let headerHeight: CGFloat = 18
+            let headerSpacing: CGFloat = 8
+            let availableForRows = geo.size.height - headerHeight - headerSpacing
+            let effectiveRowCount = max(displayed.count, 3)
+            let rowHeight = availableForRows / CGFloat(effectiveRowCount)
+            let fontSize = max(min(rowHeight * 0.55, 19), 11)
+
+            VStack(alignment: .leading, spacing: 0) {
+                Text("Birthdays Today")
+                    .font(.caption)
+                    .fontWeight(.semibold)
                     .foregroundStyle(.secondary)
+                    .textCase(.uppercase)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.6)
+                    .frame(height: headerHeight, alignment: .leading)
+                    .padding(.bottom, headerSpacing)
+
+                ForEach(displayed) { person in
+                    HStack(spacing: 6) {
+                        Text(person.emoji)
+                        Text(person.name)
+                            .fontWeight(.semibold)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.5)
+                            .opacity(person.isAcknowledged ? 0.45 : 1.0)
+                        Spacer(minLength: 2)
+                        Button(intent: ToggleBirthdayIntent(personID: person.id.uuidString)) {
+                            Image(systemName: person.isAcknowledged ? "checkmark.circle.fill" : "circle")
+                                .foregroundStyle(person.isAcknowledged ? .green : .secondary)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    .font(.system(size: fontSize))
+                    .frame(height: rowHeight, alignment: .center)
+                }
+                if extraCount > 0 {
+                    Text("+\(extraCount) more today")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        .frame(height: rowHeight * 0.6, alignment: .center)
+                }
             }
+            .frame(width: geo.size.width, alignment: .topLeading)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-        .padding(10)
+        .padding(.horizontal, 14)
+        .padding(.top, 18)
+        .padding(.bottom, 14)
     }
 
-    /// Medium widget: up to three people in a list, each with its own checkbox.
+    /// Medium widget: same adaptive sizing approach as small — row height (and font size)
+    /// is computed from actual available space rather than guessed, so we're not leaving
+    /// room on the table. Capped at 4; anything beyond collapses into "+N more today."
     private var mediumLayout: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            ForEach(entry.people.prefix(3)) { person in
-                HStack {
-                    Text(person.emoji)
-                    VStack(alignment: .leading) {
-                        Text(person.name).font(.headline).lineLimit(1)
-                        if let age = person.turningAge {
-                            Text("Turning \(age)").font(.caption2).foregroundStyle(.secondary)
+        let maxRows = 4
+        let displayed = Array(entry.people.prefix(maxRows))
+        let extraCount = entry.people.count - displayed.count
+
+        return GeometryReader { geo in
+            let headerHeight: CGFloat = 18
+            let headerSpacing: CGFloat = 8
+            let overflowHeight: CGFloat = extraCount > 0 ? 16 : 0
+            let availableForRows = geo.size.height - headerHeight - headerSpacing - overflowHeight
+            let effectiveRowCount = max(displayed.count, 3)
+            let rowHeight = availableForRows / CGFloat(effectiveRowCount)
+            let fontSize = max(min(rowHeight * 0.55, 19), 12)
+            let checkboxSize = max(fontSize + 4, 18)
+
+            VStack(alignment: .leading, spacing: 0) {
+                Text("Birthdays Today")
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(.secondary)
+                    .textCase(.uppercase)
+                    .frame(height: headerHeight, alignment: .leading)
+                    .padding(.bottom, headerSpacing)
+
+                ForEach(displayed) { person in
+                    HStack(spacing: 10) {
+                        Text(person.emoji)
+                        HStack(spacing: 6) {
+                            Text(person.name)
+                                .fontWeight(.semibold)
+                                .lineLimit(1)
+                            if let age = person.turningAge {
+                                Text("Turning \(age)")
+                                    .foregroundStyle(.secondary)
+                                    .lineLimit(1)
+                            }
                         }
+                        .opacity(person.isAcknowledged ? 0.45 : 1.0)
+                        Spacer(minLength: 8)
+                        Button(intent: ToggleBirthdayIntent(personID: person.id.uuidString)) {
+                            Image(systemName: person.isAcknowledged ? "checkmark.circle.fill" : "circle")
+                                .font(.system(size: checkboxSize))
+                                .foregroundStyle(person.isAcknowledged ? .green : .secondary)
+                        }
+                        .buttonStyle(.plain)
                     }
-                    Spacer()
-                    Button(intent: ToggleBirthdayIntent(personID: person.id.uuidString)) {
-                        Image(systemName: person.isAcknowledged ? "checkmark.circle.fill" : "circle")
-                            .foregroundStyle(person.isAcknowledged ? .green : .secondary)
-                    }
-                    .buttonStyle(.plain)
+                    .font(.system(size: fontSize))
+                    .frame(height: rowHeight, alignment: .center)
+                }
+                if extraCount > 0 {
+                    Text("+\(extraCount) more today")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        .frame(height: overflowHeight, alignment: .leading)
                 }
             }
+            .frame(width: geo.size.width, alignment: .topLeading)
         }
-        .padding(10)
+        .padding(.horizontal, 18)
+        .padding(.top, 18)
+        .padding(.bottom, 14)
     }
 }
 
@@ -167,4 +227,63 @@ struct BirthdayBoxWidgetBundle: WidgetBundle {
     var body: some Widget {
         BirthdayBoxWidget()
     }
+}
+
+#Preview("Small - 1 person", as: .systemSmall) {
+    BirthdayBoxWidget()
+} timeline: {
+    BirthdayEntry(date: .now, people: [
+        PersonSnapshot(id: UUID(), name: "Julia", emoji: "🎂", isAcknowledged: false, turningAge: 36)
+    ])
+}
+
+#Preview("Small - 5 people", as: .systemSmall) {
+    BirthdayBoxWidget()
+} timeline: {
+    BirthdayEntry(date: .now, people: [
+        PersonSnapshot(id: UUID(), name: "Julia", emoji: "🎂", isAcknowledged: false, turningAge: 36),
+        PersonSnapshot(id: UUID(), name: "Sam", emoji: "🎉", isAcknowledged: true, turningAge: nil),
+        PersonSnapshot(id: UUID(), name: "Ann Marie", emoji: "🎈", isAcknowledged: false, turningAge: 28),
+        PersonSnapshot(id: UUID(), name: "Chris", emoji: "🎄", isAcknowledged: false, turningAge: nil),
+        PersonSnapshot(id: UUID(), name: "Morgan", emoji: "🥳", isAcknowledged: true, turningAge: 41)
+    ])
+}
+
+#Preview("Small - empty", as: .systemSmall) {
+    BirthdayBoxWidget()
+} timeline: {
+    BirthdayEntry(date: .now, people: [])
+}
+
+#Preview("Medium - 2 people", as: .systemMedium) {
+    BirthdayBoxWidget()
+} timeline: {
+    BirthdayEntry(date: .now, people: [
+        PersonSnapshot(id: UUID(), name: "Julia", emoji: "🎂", isAcknowledged: false, turningAge: 36),
+        PersonSnapshot(id: UUID(), name: "Sam", emoji: "🎉", isAcknowledged: true, turningAge: nil)
+    ])
+}
+
+#Preview("Medium - 4 people", as: .systemMedium) {
+    BirthdayBoxWidget()
+} timeline: {
+    BirthdayEntry(date: .now, people: [
+        PersonSnapshot(id: UUID(), name: "Julia", emoji: "🎂", isAcknowledged: false, turningAge: 36),
+        PersonSnapshot(id: UUID(), name: "Sam", emoji: "🎉", isAcknowledged: true, turningAge: nil),
+        PersonSnapshot(id: UUID(), name: "Ann Marie", emoji: "🎈", isAcknowledged: false, turningAge: 28),
+        PersonSnapshot(id: UUID(), name: "Chris", emoji: "🎄", isAcknowledged: false, turningAge: nil)
+    ])
+}
+
+#Preview("Medium - 6 people (overflow)", as: .systemMedium) {
+    BirthdayBoxWidget()
+} timeline: {
+    BirthdayEntry(date: .now, people: [
+        PersonSnapshot(id: UUID(), name: "Julia", emoji: "🎂", isAcknowledged: false, turningAge: 36),
+        PersonSnapshot(id: UUID(), name: "Sam", emoji: "🎉", isAcknowledged: true, turningAge: nil),
+        PersonSnapshot(id: UUID(), name: "Ann Marie", emoji: "🎈", isAcknowledged: false, turningAge: 28),
+        PersonSnapshot(id: UUID(), name: "Chris", emoji: "🎄", isAcknowledged: false, turningAge: nil),
+        PersonSnapshot(id: UUID(), name: "Morgan", emoji: "🥳", isAcknowledged: true, turningAge: 41),
+        PersonSnapshot(id: UUID(), name: "Taylor", emoji: "🎁", isAcknowledged: false, turningAge: 22)
+    ])
 }

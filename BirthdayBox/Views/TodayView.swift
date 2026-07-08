@@ -55,22 +55,19 @@ struct BirthdayRow: View {
                 HStack(spacing: 6) {
                     Text(person.name)
                         .font(.headline)
-                        .strikethrough(person.isAcknowledgedThisYear)
-                        .foregroundStyle(person.isAcknowledgedThisYear ? .secondary : .primary)
                     if let age = person.turningAge {
-                        Text("· Turning \(age)")
+                        Text(" Turning \(age)")
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
-                            .strikethrough(person.isAcknowledgedThisYear)
                     }
                 }
                 if let notes = person.notes, !notes.isEmpty {
                     Text(notes)
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                        .strikethrough(person.isAcknowledgedThisYear)
                 }
             }
+            .opacity(person.isAcknowledgedThisYear ? 0.45 : 1.0)
             Spacer()
             Button(action: onToggle) {
                 Image(systemName: person.isAcknowledgedThisYear ? "checkmark.circle.fill" : "circle")
@@ -81,4 +78,30 @@ struct BirthdayRow: View {
         }
         .padding(.vertical, 4)
     }
+}
+
+#Preview {
+    let config = ModelConfiguration(isStoredInMemoryOnly: true)
+    let container = try! ModelContainer(for: Person.self, configurations: config)
+    let today = Date()
+    let month = Calendar.current.component(.month, from: today)
+    let day = Calendar.current.component(.day, from: today)
+
+    let julia = Person(name: "Julia", birthMonth: month, birthDay: day, birthYear: 1990, emoji: "🎂", notes: "Make a card")
+    let sam = Person(name: "Sam", birthMonth: month, birthDay: day, emoji: "🎉")
+
+    container.mainContext.insert(julia)
+    container.mainContext.insert(sam)
+    sam.acknowledgeThisYear()
+    try? container.mainContext.save()
+
+    return TodayView()
+        .modelContainer(container)
+}
+
+#Preview("Empty") {
+    let config = ModelConfiguration(isStoredInMemoryOnly: true)
+    let container = try! ModelContainer(for: Person.self, configurations: config)
+    return TodayView()
+        .modelContainer(container)
 }

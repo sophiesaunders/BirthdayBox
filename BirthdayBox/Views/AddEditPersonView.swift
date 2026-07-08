@@ -43,8 +43,10 @@ struct AddEditPersonView: View {
                 }
                 Section("Notes") {
                     TextField("e.g. loves handwritten cards", text: $notes, axis: .vertical)
+                        .lineLimit(1...4)
                 }
             }
+            .formStyle(.grouped)
             .navigationTitle(person == nil ? "Add Person" : "Edit Person")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -57,6 +59,7 @@ struct AddEditPersonView: View {
             }
             .onAppear(perform: loadExisting)
         }
+        .frame(minWidth: 380, idealWidth: 420, maxWidth: 480)
     }
 
     private func loadExisting() {
@@ -103,4 +106,19 @@ struct AddEditPersonView: View {
         let formatter = DateFormatter()
         return formatter.monthSymbols[month - 1]
     }
+}
+
+#Preview("Add") {
+    AddEditPersonView(person: nil)
+        .modelContainer(for: Person.self, inMemory: true)
+}
+
+#Preview("Edit") {
+    let config = ModelConfiguration(isStoredInMemoryOnly: true)
+    let container = try! ModelContainer(for: Person.self, configurations: config)
+    let julia = Person(name: "Julia", birthMonth: 7, birthDay: 6, birthYear: 1990, emoji: "🎂", notes: "Make a card")
+    container.mainContext.insert(julia)
+
+    return AddEditPersonView(person: julia)
+        .modelContainer(container)
 }
