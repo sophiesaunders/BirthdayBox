@@ -49,18 +49,15 @@ BirthdayBox/
 - Xcode with iOS 18+ SDK (interactive widget buttons require it)
 - iOS or macOS 18+ device or simulator
 
-## Bugs
-
-- [ ] We can't set emojis on macOS...
-- [ ] Add a color background to the widget? And/or the app? Configurable?
-
 ## Features
 
+- [ ] Bug: Every time you uncheck a box after 7pm, it re-issues the notification
 - [ ] Add Person: Add basic holidays (Mother's Day, Father's Day)
-- [ ] Add Person: Add a one-time note, e.g. an idea for an upcoming birthday gift
 - [ ] Display: Get a reminder ahead of time about an upcoming birthday (maybe optional)
 - [ ] Display: Continue tracking overdue birthdays until they're checked off
 - [ ] Icon: Add dark and tinted modes to the app icon, remove the white border
+- [ ] General: Add a color background to the widget? And/or the app? Configurable?
+- [ ] Emojis: Eliminate the custom emoji picker, figure out another macOS solution
 
 ## Testing
 

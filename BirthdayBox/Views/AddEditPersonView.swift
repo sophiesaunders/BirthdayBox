@@ -15,6 +15,7 @@ struct AddEditPersonView: View {
     @State private var yearString: String = "1990"
     @State private var emoji: String = "🎂"
     @State private var notes: String = ""
+    @State private var showingEmojiPicker = false
 
     private let months = Array(1...12)
     private let days = Array(1...31)
@@ -25,12 +26,25 @@ struct AddEditPersonView: View {
             Form {
                 Section("Person") {
                     TextField("Name", text: $name)
-                    TextField("Emoji", text: $emoji)
-                        .onChange(of: emoji) { _, newValue in
-                            if let last = newValue.last {
-                                emoji = String(last)
-                            }
+                    HStack {
+                        Text("Emoji")
+                        Spacer()
+                        Button {
+                            showingEmojiPicker = true
+                        } label: {
+                            Text(emoji)
+                                .font(.system(size: 20))
+                                .frame(width: 36, height: 36)
+                                .background(.quaternary, in: RoundedRectangle(cornerRadius: 8))
                         }
+                        .buttonStyle(.plain)
+                        .popover(isPresented: $showingEmojiPicker) {
+                            EmojiPickerView(selection: $emoji) {
+                                showingEmojiPicker = false
+                            }
+                            .presentationCompactAdaptation(.popover)
+                        }
+                    }
                 }
                 Section {
                     #if os(iOS)
@@ -47,6 +61,9 @@ struct AddEditPersonView: View {
                         .pickerStyle(.wheel)
                         .labelsHidden()
                     }
+                    .frame(height: 150)
+                    .clipped()
+                    .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
                     #else
                     Picker("Month", selection: $month) {
                         ForEach(months, id: \.self) { Text(monthName($0)).tag($0) }
