@@ -28,9 +28,10 @@ struct ToggleBirthdayIntent: AppIntent {
                 person.unacknowledgeThisYear()
             } else {
                 person.acknowledgeThisYear()
-                NotificationManager.cancelEveningReminder(for: person)
             }
             try context.save()
+            let allPeople = (try? context.fetch(FetchDescriptor<Person>())) ?? []
+            NotificationManager.refreshEveningReminders(people: allPeople)
         }
 
         WidgetCenter.shared.reloadAllTimelines()

@@ -1,7 +1,7 @@
 # BirthdayBox
 
-A birthday reminder app for iOS with a home-screen widget. Instead of just
-telling you whose birthday it is, it tracks whether you've actually reached
+A birthday reminder app for iOS and macOS with a home-screen widget. Instead of
+just telling you whose birthday it is, it tracks whether you've actually reached
 out — a small, recurring checklist rather than a one-off alert.
 
 ## What it does
@@ -46,25 +46,29 @@ BirthdayBox/
 
 ## Requirements
 
-- Xcode with iOS 17+ SDK (interactive widget buttons require it)
-- iOS 17+ device or simulator
+- Xcode with iOS 18+ SDK (interactive widget buttons require it)
+- iOS or macOS 18+ device or simulator
 
 ## TODO
-
-- [ ] Automatically re-order the "Today" section so completed ones go to the bottom
-- [ ] Fix weird behavior on macOS with the "e.g." part of the "Notes" when adding a new bday
-- [ ] Add an emoji picker option rather than expecting a string
+aski
 - [ ] Create a logo / icon, add to the app
 
-## Future ideas
+## Feature ideas
 
-- [ ] Add the ability to add basic holidays (Mother's Day, Father's Day)
-- [ ] Add the ability to give you a reminder ahead of time about an upcoming birthday
-- [ ] Add the ability to add a one-time note, e.g. an idea for their upcoming birthday gift
-- [ ] Add the ability to track "Overdue" birthdays as well (not checked off in time)
-- [ ] Add the ability to change the background color of the widget + app
-- [ ] Add a "today" shortcut to the "Add Person" form, so it auto-sets birthday to current date
-- [ ] Improve the Month + Date fields for their birthday. Can we make it easier?
-- [ ] Edge cases: Created without day, or without month, or tons of bdays on a day, or long emoji string set, or long name set, deleting a person??
-- [ ] Add some top bar to the widget, or a single emoji rather than per-person, etc.
-- [ ] Make notifications configurable in the app!! Could be options for in the morning, and for in the evening (for whatever isn't complete) and you pick the time
+- [ ] Add Person: Add basic holidays (Mother's Day, Father's Day)
+- [ ] Add Person: Add a one-time note, e.g. an idea for an upcoming birthday gift
+- [ ] Display: Get a reminder ahead of time about an upcoming birthday (maybe optional)
+- [ ] Display: Continue tracking overdue birthdays until they're checked off
+- [ ] General: Allow user to set the background color of the widget + app
+
+## Testing
+
+- [ ] Do notifications work?
+- [x] Add Person: What if no date is set? -> Has default value, not possible
+- [x] Add Person: What if an invalid date is set? -> Jumps to next legitimate date
+- [x] Add Person: What if no name is set? -> "Save" button is grayed out
+- [ ] Today: What if their name is longer than the space allowed?
+- [ ] Today: What if their emoji is longer than 1 character, or not an emoji?
+- [ ] Today: What if the "Notes" are longer than the space allowed?
+- [x] Today: 0, 1, 2, 3, 4, etc. birthdays appearance
+- [x] Everyone: Delete a person

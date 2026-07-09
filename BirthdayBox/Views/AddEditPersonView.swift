@@ -18,7 +18,7 @@ struct AddEditPersonView: View {
 
     private let months = Array(1...12)
     private let days = Array(1...31)
-    private let years = Array((1900...Calendar.current.component(.year, from: Date())).reversed()).map { String($0) }
+    private let years = Array(1900...Calendar.current.component(.year, from: Date())).map { String($0) }
 
     var body: some View {
         NavigationStack {
@@ -26,19 +26,39 @@ struct AddEditPersonView: View {
                 Section("Person") {
                     TextField("Name", text: $name)
                     TextField("Emoji", text: $emoji)
+                        .onChange(of: emoji) { _, newValue in
+                            if let last = newValue.last {
+                                emoji = String(last)
+                            }
+                        }
                 }
-                Section("Birthday") {
-                    Picker("Month", selection: $month) {
-                        ForEach(months, id: \.self) { Text(monthName($0)).tag($0) }
-                    }
-                    Picker("Day", selection: $day) {
-                        ForEach(days, id: \.self) { Text("\($0)").tag($0) }
+                Section {
+                    HStack(spacing: 0) {
+                        Picker("Month", selection: $month) {
+                            ForEach(months, id: \.self) { Text(monthName($0)).tag($0) }
+                        }
+                        .pickerStyle(.wheel)
+                        .labelsHidden()
+
+                        Picker("Day", selection: $day) {
+                            ForEach(days, id: \.self) { Text("\($0)").tag($0) }
+                        }
+                        .pickerStyle(.wheel)
+                        .labelsHidden()
                     }
                     Toggle("I know their birth year", isOn: $includeYear)
                     if includeYear {
                         Picker("Year", selection: $yearString) {
                             ForEach(years, id: \.self) { Text($0).tag($0) }
                         }
+                    }
+                } header: {
+                    HStack {
+                        Text("Birthday")
+                        Spacer()
+                        Button("Set to Today") { setToToday() }
+                            .font(.subheadline)
+                            .textCase(nil)
                     }
                 }
                 Section("Notes") {
@@ -83,8 +103,6 @@ struct AddEditPersonView: View {
             person.birthYear = includeYear ? Int(yearString) : nil
             person.emoji = emoji
             person.notes = notes
-            NotificationManager.cancelMorningNotification(for: person)
-            NotificationManager.scheduleMorningNotification(for: person)
         } else {
             let newPerson = Person(
                 name: name,
@@ -95,11 +113,23 @@ struct AddEditPersonView: View {
                 notes: notes
             )
             modelContext.insert(newPerson)
-            NotificationManager.scheduleMorningNotification(for: newPerson)
         }
         try? modelContext.save()
+        refreshNotifications()
         WidgetCenter.shared.reloadAllTimelines()
         dismiss()
+    }
+
+    private func refreshNotifications() {
+        let allPeople = (try? modelContext.fetch(FetchDescriptor<Person>())) ?? []
+        NotificationManager.refreshMorningNotifications(people: allPeople)
+        NotificationManager.refreshEveningReminders(people: allPeople)
+    }
+
+    private func setToToday() {
+        let today = Calendar.current.dateComponents([.month, .day], from: Date())
+        month = today.month ?? month
+        day = today.day ?? day
     }
 
     private func monthName(_ month: Int) -> String {

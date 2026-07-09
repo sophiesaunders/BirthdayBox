@@ -104,10 +104,11 @@ struct PersonListView: View {
     }
 
     private func deletePerson(_ person: Person) {
-        NotificationManager.cancelMorningNotification(for: person)
-        NotificationManager.cancelEveningReminder(for: person)
         modelContext.delete(person)
         try? modelContext.save()
+        let remainingPeople = people.filter { $0.id != person.id }
+        NotificationManager.refreshMorningNotifications(people: remainingPeople)
+        NotificationManager.refreshEveningReminders(people: remainingPeople)
         WidgetCenter.shared.reloadAllTimelines()
     }
 }

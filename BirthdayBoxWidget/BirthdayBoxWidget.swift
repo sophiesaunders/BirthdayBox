@@ -40,7 +40,14 @@ struct BirthdayProvider: TimelineProvider {
     private func fetchTodaysPeople() -> [PersonSnapshot] {
         let context = ModelContext(PersistenceController.shared)
         let all = (try? context.fetch(FetchDescriptor<Person>())) ?? []
-        return all.filter { $0.isBirthdayToday }.map {
+        return all.filter { $0.isBirthdayToday }
+            .sorted { lhs, rhs in
+                if lhs.isAcknowledgedThisYear != rhs.isAcknowledgedThisYear {
+                    return !lhs.isAcknowledgedThisYear
+                }
+                return lhs.name.localizedStandardCompare(rhs.name) == .orderedAscending
+            }
+            .map {
             PersonSnapshot(
                 id: $0.id,
                 name: $0.name,
@@ -55,6 +62,11 @@ struct BirthdayProvider: TimelineProvider {
 struct BirthdayBoxWidgetView: View {
     @Environment(\.widgetFamily) private var family
     var entry: BirthdayProvider.Entry
+
+    /// Fixed per widget size (rather than derived from row height) so name text doesn't grow
+    /// just because a larger widget happens to have more vertical room per row.
+    static let smallNameFontSize: CGFloat = 15
+    static let mediumNameFontSize: CGFloat = 17
 
     var body: some View {
         if entry.people.isEmpty {
@@ -71,7 +83,9 @@ struct BirthdayBoxWidgetView: View {
 
     private var emptyState: some View {
         VStack(spacing: 4) {
-            Text("🎉").font(.title)
+            Image(systemName: "party.popper")
+                .font(.title2)
+                .foregroundStyle(.secondary)
             Text("No birthdays today")
                 .font(.caption2)
                 .foregroundStyle(.secondary)
@@ -87,15 +101,16 @@ struct BirthdayBoxWidgetView: View {
     /// to fill (and centering awkwardly) when there are only 1-2 people.
     private var smallLayout: some View {
         let displayed = Array(entry.people.prefix(5))
-        let extraCount = entry.people.count - displayed.count
 
         return GeometryReader { geo in
             let headerHeight: CGFloat = 18
-            let headerSpacing: CGFloat = 8
-            let availableForRows = geo.size.height - headerHeight - headerSpacing
+            let headerSpacing: CGFloat = 2
+            let extraCount = entry.people.count - displayed.count
+            let overflowTopSpacing: CGFloat = extraCount > 0 ? 4 : 0
+            let overflowHeight: CGFloat = extraCount > 0 ? 16 : 0
+            let availableForRows = geo.size.height - headerHeight - headerSpacing - overflowHeight - overflowTopSpacing
             let effectiveRowCount = max(displayed.count, 3)
             let rowHeight = availableForRows / CGFloat(effectiveRowCount)
-            let fontSize = max(min(rowHeight * 0.55, 19), 11)
 
             VStack(alignment: .leading, spacing: 0) {
                 Text("Birthdays Today")
@@ -114,35 +129,37 @@ struct BirthdayBoxWidgetView: View {
                         Text(person.name)
                             .fontWeight(.semibold)
                             .lineLimit(1)
-                            .minimumScaleFactor(0.5)
+                            .truncationMode(.tail)
                             .opacity(person.isAcknowledged ? 0.45 : 1.0)
                         Spacer(minLength: 2)
                         Button(intent: ToggleBirthdayIntent(personID: person.id.uuidString)) {
                             Image(systemName: person.isAcknowledged ? "checkmark.circle.fill" : "circle")
+                                .font(.system(size: 17))
                                 .foregroundStyle(person.isAcknowledged ? .green : .secondary)
                         }
                         .buttonStyle(.plain)
                     }
-                    .font(.system(size: fontSize))
+                    .font(.system(size: BirthdayBoxWidgetView.smallNameFontSize))
                     .frame(height: rowHeight, alignment: .center)
                 }
                 if extraCount > 0 {
                     Text("+\(extraCount) more today")
                         .font(.caption2)
                         .foregroundStyle(.secondary)
-                        .frame(height: rowHeight * 0.6, alignment: .center)
+                        .padding(.top, overflowTopSpacing)
+                        .frame(height: overflowHeight + overflowTopSpacing, alignment: .bottom)
                 }
             }
             .frame(width: geo.size.width, alignment: .topLeading)
         }
         .padding(.horizontal, 14)
-        .padding(.top, 18)
-        .padding(.bottom, 14)
+        .padding(.top, 10)
+        .padding(.bottom, 8)
     }
 
-    /// Medium widget: same adaptive sizing approach as small — row height (and font size)
-    /// is computed from actual available space rather than guessed, so we're not leaving
-    /// room on the table. Capped at 4; anything beyond collapses into "+N more today."
+    /// Medium widget: row height is still computed from actual available space (for
+    /// vertical distribution), but the name text uses the same fixed font size as the
+    /// small widget so text doesn't grow just because more space happens to be available.
     private var mediumLayout: some View {
         let maxRows = 4
         let displayed = Array(entry.people.prefix(maxRows))
@@ -150,13 +167,13 @@ struct BirthdayBoxWidgetView: View {
 
         return GeometryReader { geo in
             let headerHeight: CGFloat = 18
-            let headerSpacing: CGFloat = 8
+            let headerSpacing: CGFloat = 4
+            let overflowTopSpacing: CGFloat = extraCount > 0 ? 4 : 0
             let overflowHeight: CGFloat = extraCount > 0 ? 16 : 0
-            let availableForRows = geo.size.height - headerHeight - headerSpacing - overflowHeight
+            let availableForRows = geo.size.height - headerHeight - headerSpacing - overflowHeight - overflowTopSpacing
             let effectiveRowCount = max(displayed.count, 3)
             let rowHeight = availableForRows / CGFloat(effectiveRowCount)
-            let fontSize = max(min(rowHeight * 0.55, 19), 12)
-            let checkboxSize = max(fontSize + 4, 18)
+            let checkboxSize: CGFloat = 19
 
             VStack(alignment: .leading, spacing: 0) {
                 Text("Birthdays Today")
@@ -189,21 +206,22 @@ struct BirthdayBoxWidgetView: View {
                         }
                         .buttonStyle(.plain)
                     }
-                    .font(.system(size: fontSize))
+                    .font(.system(size: Self.mediumNameFontSize))
                     .frame(height: rowHeight, alignment: .center)
                 }
                 if extraCount > 0 {
                     Text("+\(extraCount) more today")
                         .font(.caption2)
                         .foregroundStyle(.secondary)
-                        .frame(height: overflowHeight, alignment: .leading)
+                        .padding(.top, overflowTopSpacing)
+                        .frame(height: overflowHeight + overflowTopSpacing, alignment: .bottom)
                 }
             }
             .frame(width: geo.size.width, alignment: .topLeading)
         }
         .padding(.horizontal, 18)
-        .padding(.top, 18)
-        .padding(.bottom, 14)
+        .padding(.top, 10)
+        .padding(.bottom, 10)
     }
 }
 

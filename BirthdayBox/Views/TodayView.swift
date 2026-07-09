@@ -8,6 +8,12 @@ struct TodayView: View {
 
     private var todaysPeople: [Person] {
         people.filter { $0.isBirthdayToday }
+            .sorted { lhs, rhs in
+                if lhs.isAcknowledgedThisYear != rhs.isAcknowledgedThisYear {
+                    return !lhs.isAcknowledgedThisYear
+                }
+                return lhs.name.localizedStandardCompare(rhs.name) == .orderedAscending
+            }
     }
 
     var body: some View {
@@ -36,9 +42,9 @@ struct TodayView: View {
             person.unacknowledgeThisYear()
         } else {
             person.acknowledgeThisYear()
-            NotificationManager.cancelEveningReminder(for: person)
         }
         try? modelContext.save()
+        NotificationManager.refreshEveningReminders(people: people)
         WidgetCenter.shared.reloadAllTimelines()
     }
 }
