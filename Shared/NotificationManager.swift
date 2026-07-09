@@ -76,6 +76,16 @@ enum NotificationManager {
         let today = Date()
         let identifier = eveningIdentifier(for: today)
 
+        // Sweep away any stale "evening-" notifications left over from older app versions
+        // (e.g. the old per-person scheme), since only `identifier` should ever be pending.
+        UNUserNotificationCenter.current().getPendingNotificationRequests { requests in
+            let staleIDs = requests.map(\.identifier)
+                .filter { $0.hasPrefix("evening-") && $0 != identifier }
+            if !staleIDs.isEmpty {
+                UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: staleIDs)
+            }
+        }
+
         let unacknowledgedToday = people.filter { $0.isBirthdayToday && !$0.isAcknowledgedThisYear }
 
         guard !unacknowledgedToday.isEmpty else {
@@ -84,14 +94,10 @@ enum NotificationManager {
         }
 
         let content = UNMutableNotificationContent()
-        if unacknowledgedToday.count == 1 {
-            let person = unacknowledgedToday[0]
-            content.title = "🎁 Don't forget \(person.name)"
-            content.body = "You haven't checked off \(person.name)'s birthday yet today."
-        } else {
-            content.title = "🎁 \(unacknowledgedToday.count) birthdays still unchecked"
-            content.body = unacknowledgedToday.map(\.name).joined(separator: ", ")
-        }
+        content.title = "🔔 Don't forget \(unacknowledgedToday.map(\.name).joined(separator: ", "))"
+        content.body = unacknowledgedToday.count == 1
+            ? "You haven't checked off \(unacknowledgedToday[0].name)'s birthday yet today."
+            : "You haven't checked off their birthdays yet today."
         content.sound = .default
 
         var triggerDate = calendar.dateComponents([.year, .month, .day], from: today)

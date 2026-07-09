@@ -64,7 +64,7 @@ BirthdayBox/
 
 ## Testing
 
-- [ ] Do notifications work?
+- [x] Do notifications work?
 - [x] Add Person: What if no date is set? -> Has default value, not possible
 - [x] Add Person: What if an invalid date is set? -> Jumps to next legitimate date
 - [x] Add Person: What if no name is set? -> "Save" button is grayed out
