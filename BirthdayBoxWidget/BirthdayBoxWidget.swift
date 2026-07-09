@@ -103,7 +103,7 @@ struct BirthdayBoxWidgetView: View {
         let displayed = Array(entry.people.prefix(5))
 
         return GeometryReader { geo in
-            let headerHeight: CGFloat = 18
+            let headerHeight: CGFloat = 20
             let headerSpacing: CGFloat = 2
             let extraCount = entry.people.count - displayed.count
             let overflowTopSpacing: CGFloat = extraCount > 0 ? 4 : 0
@@ -114,7 +114,7 @@ struct BirthdayBoxWidgetView: View {
 
             VStack(alignment: .leading, spacing: 0) {
                 Text("Birthdays Today")
-                    .font(.caption)
+                    .font(.footnote)
                     .fontWeight(.semibold)
                     .foregroundStyle(.secondary)
                     .textCase(.uppercase)
@@ -166,7 +166,7 @@ struct BirthdayBoxWidgetView: View {
         let extraCount = entry.people.count - displayed.count
 
         return GeometryReader { geo in
-            let headerHeight: CGFloat = 18
+            let headerHeight: CGFloat = 20
             let headerSpacing: CGFloat = 4
             let overflowTopSpacing: CGFloat = extraCount > 0 ? 4 : 0
             let overflowHeight: CGFloat = extraCount > 0 ? 16 : 0
@@ -177,7 +177,7 @@ struct BirthdayBoxWidgetView: View {
 
             VStack(alignment: .leading, spacing: 0) {
                 Text("Birthdays Today")
-                    .font(.caption)
+                    .font(.footnote)
                     .fontWeight(.semibold)
                     .foregroundStyle(.secondary)
                     .textCase(.uppercase)

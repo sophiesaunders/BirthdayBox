@@ -33,6 +33,7 @@ struct AddEditPersonView: View {
                         }
                 }
                 Section {
+                    #if os(iOS)
                     HStack(spacing: 0) {
                         Picker("Month", selection: $month) {
                             ForEach(months, id: \.self) { Text(monthName($0)).tag($0) }
@@ -46,6 +47,14 @@ struct AddEditPersonView: View {
                         .pickerStyle(.wheel)
                         .labelsHidden()
                     }
+                    #else
+                    Picker("Month", selection: $month) {
+                        ForEach(months, id: \.self) { Text(monthName($0)).tag($0) }
+                    }
+                    Picker("Day", selection: $day) {
+                        ForEach(days, id: \.self) { Text("\($0)").tag($0) }
+                    }
+                    #endif
                     Toggle("I know their birth year", isOn: $includeYear)
                     if includeYear {
                         Picker("Year", selection: $yearString) {
