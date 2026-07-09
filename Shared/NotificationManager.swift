@@ -93,16 +93,24 @@ enum NotificationManager {
             return
         }
 
+        var triggerDate = calendar.dateComponents([.year, .month, .day], from: today)
+        triggerDate.hour = hour
+        triggerDate.minute = minute
+
+        // A non-repeating trigger scheduled for a time already in the past fires almost
+        // immediately rather than being dropped — so if it's already past the evening hour,
+        // don't reschedule (e.g. someone unchecking a box after 7pm shouldn't re-page them).
+        guard let triggerFireDate = calendar.date(from: triggerDate), triggerFireDate > today else {
+            UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [identifier])
+            return
+        }
+
         let content = UNMutableNotificationContent()
         content.title = "🔔 Don't forget \(unacknowledgedToday.map(\.name).joined(separator: ", "))"
         content.body = unacknowledgedToday.count == 1
             ? "You haven't checked off \(unacknowledgedToday[0].name)'s birthday yet today."
             : "You haven't checked off their birthdays yet today."
         content.sound = .default
-
-        var triggerDate = calendar.dateComponents([.year, .month, .day], from: today)
-        triggerDate.hour = hour
-        triggerDate.minute = minute
 
         let trigger = UNCalendarNotificationTrigger(dateMatching: triggerDate, repeats: false)
         let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)

@@ -51,7 +51,6 @@ BirthdayBox/
 
 ## Features
 
-- [ ] Bug: Every time you uncheck a box after 7pm, it re-issues the notification
 - [ ] Add Person: Add basic holidays (Mother's Day, Father's Day)
 - [ ] Display: Get a reminder ahead of time about an upcoming birthday (maybe optional)
 - [ ] Display: Continue tracking overdue birthdays until they're checked off
