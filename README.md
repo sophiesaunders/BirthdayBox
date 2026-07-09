@@ -49,17 +49,18 @@ BirthdayBox/
 - Xcode with iOS 18+ SDK (interactive widget buttons require it)
 - iOS or macOS 18+ device or simulator
 
-## TODO
-aski
-- [ ] Create a logo / icon, add to the app
+## Bugs
 
-## Feature ideas
+- [ ] We can't set emojis on macOS...
+- [ ] Add a color background to the widget? And/or the app? Configurable?
+
+## Features
 
 - [ ] Add Person: Add basic holidays (Mother's Day, Father's Day)
 - [ ] Add Person: Add a one-time note, e.g. an idea for an upcoming birthday gift
 - [ ] Display: Get a reminder ahead of time about an upcoming birthday (maybe optional)
 - [ ] Display: Continue tracking overdue birthdays until they're checked off
-- [ ] General: Allow user to set the background color of the widget + app
+- [ ] Icon: Add dark and tinted modes to the app icon, remove the white border
 
 ## Testing
 
@@ -67,8 +68,8 @@ aski
 - [x] Add Person: What if no date is set? -> Has default value, not possible
 - [x] Add Person: What if an invalid date is set? -> Jumps to next legitimate date
 - [x] Add Person: What if no name is set? -> "Save" button is grayed out
-- [ ] Today: What if their name is longer than the space allowed?
-- [ ] Today: What if their emoji is longer than 1 character, or not an emoji?
+- [x] Today: What if their name is longer than the space allowed?
+- [x] Today: What if their emoji is longer than 1 character, or not an emoji?
 - [ ] Today: What if the "Notes" are longer than the space allowed?
 - [x] Today: 0, 1, 2, 3, 4, etc. birthdays appearance
 - [x] Everyone: Delete a person
