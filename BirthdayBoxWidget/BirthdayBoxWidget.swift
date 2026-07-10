@@ -14,22 +14,24 @@ struct PersonSnapshot: Identifiable {
     let name: String
     let emoji: String
     let isAcknowledged: Bool
+    let isOverdue: Bool
+    let daysOverdue: Int?
     let turningAge: Int?
 }
 
 struct BirthdayProvider: TimelineProvider {
     func placeholder(in context: Context) -> BirthdayEntry {
         BirthdayEntry(date: Date(), people: [
-            PersonSnapshot(id: UUID(), name: "Sam", emoji: "🎂", isAcknowledged: false, turningAge: 30)
+            PersonSnapshot(id: UUID(), name: "Sam", emoji: "🎂", isAcknowledged: false, isOverdue: false, daysOverdue: nil, turningAge: 30)
         ])
     }
 
     func getSnapshot(in context: Context, completion: @escaping (BirthdayEntry) -> Void) {
-        completion(BirthdayEntry(date: Date(), people: fetchTodaysPeople()))
+        completion(BirthdayEntry(date: Date(), people: fetchTodayAndOverduePeople()))
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<BirthdayEntry>) -> Void) {
-        let entry = BirthdayEntry(date: Date(), people: fetchTodaysPeople())
+        let entry = BirthdayEntry(date: Date(), people: fetchTodayAndOverduePeople())
         // Refresh at the next midnight so "today's birthdays" rolls over correctly.
         let midnight = Calendar.current.nextDate(
             after: Date(), matching: DateComponents(hour: 0, minute: 0), matchingPolicy: .nextTime
@@ -37,14 +39,18 @@ struct BirthdayProvider: TimelineProvider {
         completion(Timeline(entries: [entry], policy: .after(midnight)))
     }
 
-    private func fetchTodaysPeople() -> [PersonSnapshot] {
+    private func fetchTodayAndOverduePeople() -> [PersonSnapshot] {
         let context = ModelContext(PersistenceController.shared)
         let all = (try? context.fetch(FetchDescriptor<Person>())) ?? []
-        return all.filter { $0.isBirthdayToday }
+        return all.filter { $0.isBirthdayToday || $0.isOverdue }
             .sorted { lhs, rhs in
-                if lhs.isAcknowledgedThisYear != rhs.isAcknowledgedThisYear {
-                    return !lhs.isAcknowledgedThisYear
+                func rank(_ p: Person) -> Int {
+                    if p.isBirthdayToday && !p.isAcknowledgedThisYear { return 0 }
+                    if p.isOverdue { return 1 }
+                    return 2
                 }
+                let (lr, rr) = (rank(lhs), rank(rhs))
+                if lr != rr { return lr < rr }
                 return lhs.name.localizedStandardCompare(rhs.name) == .orderedAscending
             }
             .map {
@@ -53,6 +59,8 @@ struct BirthdayProvider: TimelineProvider {
                 name: $0.name,
                 emoji: $0.emoji ?? "🎂",
                 isAcknowledged: $0.isAcknowledgedThisYear,
+                isOverdue: $0.isOverdue,
+                daysOverdue: $0.daysOverdue,
                 turningAge: $0.turningAge
             )
         }
@@ -67,6 +75,8 @@ struct BirthdayBoxWidgetView: View {
     /// just because a larger widget happens to have more vertical room per row.
     static let smallNameFontSize: CGFloat = 15
     static let mediumNameFontSize: CGFloat = 17
+
+    static let overdueColor = Color(red: 0.7, green: 0.0, blue: 0.0)
 
     var body: some View {
         if entry.people.isEmpty {
@@ -130,12 +140,13 @@ struct BirthdayBoxWidgetView: View {
                             .fontWeight(.semibold)
                             .lineLimit(1)
                             .truncationMode(.tail)
+                            .foregroundStyle(person.isOverdue ? BirthdayBoxWidgetView.overdueColor : .primary)
                             .opacity(person.isAcknowledged ? 0.45 : 1.0)
                         Spacer(minLength: 2)
                         Button(intent: ToggleBirthdayIntent(personID: person.id.uuidString)) {
                             Image(systemName: person.isAcknowledged ? "checkmark.circle.fill" : "circle")
                                 .font(.system(size: 17))
-                                .foregroundStyle(person.isAcknowledged ? .green : .secondary)
+                                .foregroundStyle(person.isAcknowledged ? .green : (person.isOverdue ? BirthdayBoxWidgetView.overdueColor : .secondary))
                         }
                         .buttonStyle(.plain)
                     }
@@ -143,7 +154,7 @@ struct BirthdayBoxWidgetView: View {
                     .frame(height: rowHeight, alignment: .center)
                 }
                 if extraCount > 0 {
-                    Text("+\(extraCount) more today")
+                    Text("+\(extraCount) more")
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                         .padding(.top, overflowTopSpacing)
@@ -191,7 +202,12 @@ struct BirthdayBoxWidgetView: View {
                             Text(person.name)
                                 .fontWeight(.semibold)
                                 .lineLimit(1)
-                            if let age = person.turningAge {
+                                .foregroundStyle(person.isOverdue ? BirthdayBoxWidgetView.overdueColor : .primary)
+                            if person.isOverdue, let daysOverdue = person.daysOverdue {
+                                Text(daysOverdue == 1 ? "1 day overdue" : "\(daysOverdue) days overdue")
+                                    .foregroundStyle(.secondary)
+                                    .lineLimit(1)
+                            } else if let age = person.turningAge {
                                 Text("Turning \(age)")
                                     .foregroundStyle(.secondary)
                                     .lineLimit(1)
@@ -202,7 +218,7 @@ struct BirthdayBoxWidgetView: View {
                         Button(intent: ToggleBirthdayIntent(personID: person.id.uuidString)) {
                             Image(systemName: person.isAcknowledged ? "checkmark.circle.fill" : "circle")
                                 .font(.system(size: checkboxSize))
-                                .foregroundStyle(person.isAcknowledged ? .green : .secondary)
+                                .foregroundStyle(person.isAcknowledged ? .green : (person.isOverdue ? BirthdayBoxWidgetView.overdueColor : .secondary))
                         }
                         .buttonStyle(.plain)
                     }
@@ -210,7 +226,7 @@ struct BirthdayBoxWidgetView: View {
                     .frame(height: rowHeight, alignment: .center)
                 }
                 if extraCount > 0 {
-                    Text("+\(extraCount) more today")
+                    Text("+\(extraCount) more")
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                         .padding(.top, overflowTopSpacing)
@@ -251,7 +267,7 @@ struct BirthdayBoxWidgetBundle: WidgetBundle {
     BirthdayBoxWidget()
 } timeline: {
     BirthdayEntry(date: .now, people: [
-        PersonSnapshot(id: UUID(), name: "Julia", emoji: "🎂", isAcknowledged: false, turningAge: 36)
+        PersonSnapshot(id: UUID(), name: "Julia", emoji: "🎂", isAcknowledged: false, isOverdue: false, daysOverdue: nil, turningAge: 36)
     ])
 }
 
@@ -259,11 +275,11 @@ struct BirthdayBoxWidgetBundle: WidgetBundle {
     BirthdayBoxWidget()
 } timeline: {
     BirthdayEntry(date: .now, people: [
-        PersonSnapshot(id: UUID(), name: "Julia", emoji: "🎂", isAcknowledged: false, turningAge: 36),
-        PersonSnapshot(id: UUID(), name: "Sam", emoji: "🎉", isAcknowledged: true, turningAge: nil),
-        PersonSnapshot(id: UUID(), name: "Ann Marie", emoji: "🎈", isAcknowledged: false, turningAge: 28),
-        PersonSnapshot(id: UUID(), name: "Chris", emoji: "🎄", isAcknowledged: false, turningAge: nil),
-        PersonSnapshot(id: UUID(), name: "Morgan", emoji: "🥳", isAcknowledged: true, turningAge: 41)
+        PersonSnapshot(id: UUID(), name: "Julia", emoji: "🎂", isAcknowledged: false, isOverdue: false, daysOverdue: nil, turningAge: 36),
+        PersonSnapshot(id: UUID(), name: "Sam", emoji: "🎉", isAcknowledged: true, isOverdue: false, daysOverdue: nil, turningAge: nil),
+        PersonSnapshot(id: UUID(), name: "Ann Marie", emoji: "🎈", isAcknowledged: false, isOverdue: false, daysOverdue: nil, turningAge: 28),
+        PersonSnapshot(id: UUID(), name: "Chris", emoji: "🎄", isAcknowledged: false, isOverdue: false, daysOverdue: nil, turningAge: nil),
+        PersonSnapshot(id: UUID(), name: "Morgan", emoji: "🥳", isAcknowledged: true, isOverdue: false, daysOverdue: nil, turningAge: 41)
     ])
 }
 
@@ -277,8 +293,8 @@ struct BirthdayBoxWidgetBundle: WidgetBundle {
     BirthdayBoxWidget()
 } timeline: {
     BirthdayEntry(date: .now, people: [
-        PersonSnapshot(id: UUID(), name: "Julia", emoji: "🎂", isAcknowledged: false, turningAge: 36),
-        PersonSnapshot(id: UUID(), name: "Sam", emoji: "🎉", isAcknowledged: true, turningAge: nil)
+        PersonSnapshot(id: UUID(), name: "Julia", emoji: "🎂", isAcknowledged: false, isOverdue: false, daysOverdue: nil, turningAge: 36),
+        PersonSnapshot(id: UUID(), name: "Sam", emoji: "🎉", isAcknowledged: true, isOverdue: false, daysOverdue: nil, turningAge: nil)
     ])
 }
 
@@ -286,10 +302,29 @@ struct BirthdayBoxWidgetBundle: WidgetBundle {
     BirthdayBoxWidget()
 } timeline: {
     BirthdayEntry(date: .now, people: [
-        PersonSnapshot(id: UUID(), name: "Julia", emoji: "🎂", isAcknowledged: false, turningAge: 36),
-        PersonSnapshot(id: UUID(), name: "Sam", emoji: "🎉", isAcknowledged: true, turningAge: nil),
-        PersonSnapshot(id: UUID(), name: "Ann Marie", emoji: "🎈", isAcknowledged: false, turningAge: 28),
-        PersonSnapshot(id: UUID(), name: "Chris", emoji: "🎄", isAcknowledged: false, turningAge: nil)
+        PersonSnapshot(id: UUID(), name: "Julia", emoji: "🎂", isAcknowledged: false, isOverdue: false, daysOverdue: nil, turningAge: 36),
+        PersonSnapshot(id: UUID(), name: "Sam", emoji: "🎉", isAcknowledged: true, isOverdue: false, daysOverdue: nil, turningAge: nil),
+        PersonSnapshot(id: UUID(), name: "Ann Marie", emoji: "🎈", isAcknowledged: false, isOverdue: false, daysOverdue: nil, turningAge: 28),
+        PersonSnapshot(id: UUID(), name: "Chris", emoji: "🎄", isAcknowledged: false, isOverdue: false, daysOverdue: nil, turningAge: nil)
+    ])
+}
+
+#Preview("Small - overdue", as: .systemSmall) {
+    BirthdayBoxWidget()
+} timeline: {
+    BirthdayEntry(date: .now, people: [
+        PersonSnapshot(id: UUID(), name: "Julia", emoji: "🎂", isAcknowledged: false, isOverdue: false, daysOverdue: nil, turningAge: 36),
+        PersonSnapshot(id: UUID(), name: "Chris", emoji: "🎄", isAcknowledged: false, isOverdue: true, daysOverdue: 4, turningAge: nil)
+    ])
+}
+
+#Preview("Medium - overdue", as: .systemMedium) {
+    BirthdayBoxWidget()
+} timeline: {
+    BirthdayEntry(date: .now, people: [
+        PersonSnapshot(id: UUID(), name: "Julia", emoji: "🎂", isAcknowledged: false, isOverdue: false, daysOverdue: nil, turningAge: 36),
+        PersonSnapshot(id: UUID(), name: "Chris", emoji: "🎄", isAcknowledged: false, isOverdue: true, daysOverdue: 4, turningAge: 22),
+        PersonSnapshot(id: UUID(), name: "MegMeg", emoji: "🥳", isAcknowledged: false, isOverdue: true, daysOverdue: 1, turningAge: nil)
     ])
 }
 
@@ -297,11 +332,11 @@ struct BirthdayBoxWidgetBundle: WidgetBundle {
     BirthdayBoxWidget()
 } timeline: {
     BirthdayEntry(date: .now, people: [
-        PersonSnapshot(id: UUID(), name: "Julia", emoji: "🎂", isAcknowledged: false, turningAge: 36),
-        PersonSnapshot(id: UUID(), name: "Sam", emoji: "🎉", isAcknowledged: true, turningAge: nil),
-        PersonSnapshot(id: UUID(), name: "Ann Marie", emoji: "🎈", isAcknowledged: false, turningAge: 28),
-        PersonSnapshot(id: UUID(), name: "Chris", emoji: "🎄", isAcknowledged: false, turningAge: nil),
-        PersonSnapshot(id: UUID(), name: "Morgan", emoji: "🥳", isAcknowledged: true, turningAge: 41),
-        PersonSnapshot(id: UUID(), name: "Taylor", emoji: "🎁", isAcknowledged: false, turningAge: 22)
+        PersonSnapshot(id: UUID(), name: "Julia", emoji: "🎂", isAcknowledged: false, isOverdue: false, daysOverdue: nil, turningAge: 36),
+        PersonSnapshot(id: UUID(), name: "Sam", emoji: "🎉", isAcknowledged: true, isOverdue: false, daysOverdue: nil, turningAge: nil),
+        PersonSnapshot(id: UUID(), name: "Ann Marie", emoji: "🎈", isAcknowledged: false, isOverdue: false, daysOverdue: nil, turningAge: 28),
+        PersonSnapshot(id: UUID(), name: "Chris", emoji: "🎄", isAcknowledged: false, isOverdue: false, daysOverdue: nil, turningAge: nil),
+        PersonSnapshot(id: UUID(), name: "Morgan", emoji: "🥳", isAcknowledged: true, isOverdue: false, daysOverdue: nil, turningAge: 41),
+        PersonSnapshot(id: UUID(), name: "Taylor", emoji: "🎁", isAcknowledged: false, isOverdue: false, daysOverdue: nil, turningAge: 22)
     ])
 }

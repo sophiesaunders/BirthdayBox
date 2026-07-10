@@ -30,6 +30,13 @@ final class Person {
         self.emoji = emoji
         self.notes = notes
         self.lastAcknowledgedYear = lastAcknowledgedYear
+
+        // A freshly added (or freshly re-dated) birthday shouldn't retroactively count as
+        // overdue for an occurrence that already passed before it existed in the app —
+        // only occurrences that pass *after* this point should ever become overdue.
+        if lastAcknowledgedYear == nil {
+            resetAcknowledgementForCurrentBirthday()
+        }
     }
 
     /// Is today this person's birthday?
@@ -67,11 +74,64 @@ final class Person {
         return calendar.dateComponents([.day], from: today, to: nextDate).day ?? Int.max
     }
 
+    /// This year's calendar day for the birthday, clamped to Feb 28 in non-leap years
+    /// for people born on Feb 29 (so they don't just vanish from overdue tracking).
+    private var thisYearOccurrenceDay: Int {
+        guard birthMonth == 2, birthDay == 29 else { return birthDay }
+        let year = Calendar.current.component(.year, from: Date())
+        let isLeap = (year % 4 == 0 && year % 100 != 0) || year % 400 == 0
+        return isLeap ? 29 : 28
+    }
+
+    /// True if this year's occurrence already passed, isn't today, and hasn't been
+    /// acknowledged. Self-resets each year — once the next occurrence arrives it becomes
+    /// `isBirthdayToday` instead, so this never accumulates multi-year backlog.
+    var isOverdue: Bool {
+        guard !isBirthdayToday, !isAcknowledgedThisYear else { return false }
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        let year = calendar.component(.year, from: today)
+        let components = DateComponents(year: year, month: birthMonth, day: thisYearOccurrenceDay)
+        guard let occurrence = calendar.date(from: components) else { return false }
+        return occurrence < today
+    }
+
+    /// Days since this year's occurrence passed, if overdue.
+    var daysOverdue: Int? {
+        guard isOverdue else { return nil }
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        let year = calendar.component(.year, from: today)
+        let components = DateComponents(year: year, month: birthMonth, day: thisYearOccurrenceDay)
+        guard let occurrence = calendar.date(from: components) else { return nil }
+        return calendar.dateComponents([.day], from: occurrence, to: today).day
+    }
+
     func acknowledgeThisYear() {
         lastAcknowledgedYear = Calendar.current.component(.year, from: Date())
     }
 
     func unacknowledgeThisYear() {
         lastAcknowledgedYear = nil
+    }
+
+    /// Call whenever the birth month/day is set or changed (creation or edit). If this
+    /// year's occurrence already passed (and isn't today), treats it as already handled
+    /// so it doesn't instantly show up as overdue backlog; otherwise leaves it unacknowledged
+    /// so it shows normally as an upcoming/today birthday when its date arrives.
+    func resetAcknowledgementForCurrentBirthday() {
+        guard !isBirthdayToday else {
+            lastAcknowledgedYear = nil
+            return
+        }
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        let year = calendar.component(.year, from: today)
+        let components = DateComponents(year: year, month: birthMonth, day: thisYearOccurrenceDay)
+        if let occurrence = calendar.date(from: components), occurrence < today {
+            lastAcknowledgedYear = year
+        } else {
+            lastAcknowledgedYear = nil
+        }
     }
 }

@@ -6,6 +6,8 @@ struct TodayView: View {
     @Query private var people: [Person]
     @Environment(\.modelContext) private var modelContext
 
+    static let overdueColor = Color(red: 0.7, green: 0.0, blue: 0.0)
+
     private var todaysPeople: [Person] {
         people.filter { $0.isBirthdayToday }
             .sorted { lhs, rhs in
@@ -16,19 +18,42 @@ struct TodayView: View {
             }
     }
 
+    private var overduePeople: [Person] {
+        people.filter { $0.isOverdue }
+            .sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
+    }
+
     var body: some View {
         NavigationStack {
             Group {
-                if todaysPeople.isEmpty {
+                if todaysPeople.isEmpty && overduePeople.isEmpty {
                     ContentUnavailableView(
                         "No birthdays today",
                         systemImage: "party.popper",
                         description: Text("Check back tomorrow!")
                     )
                 } else {
-                    List(todaysPeople) { person in
-                        BirthdayRow(person: person) {
-                            toggle(person)
+                    List {
+                        if !todaysPeople.isEmpty {
+                            Section("Today") {
+                                ForEach(todaysPeople) { person in
+                                    BirthdayRow(person: person) {
+                                        toggle(person)
+                                    }
+                                }
+                            }
+                        }
+                        if !overduePeople.isEmpty {
+                            Section {
+                                ForEach(overduePeople) { person in
+                                    BirthdayRow(person: person) {
+                                        toggle(person)
+                                    }
+                                }
+                            } header: {
+                                Text("Overdue")
+                                    .foregroundStyle(TodayView.overdueColor)
+                            }
                         }
                     }
                 }
@@ -61,7 +86,12 @@ struct BirthdayRow: View {
                 HStack(spacing: 6) {
                     Text(person.name)
                         .font(.headline)
-                    if let age = person.turningAge {
+                        .foregroundStyle(person.isOverdue ? TodayView.overdueColor : .primary)
+                    if person.isOverdue, let daysOverdue = person.daysOverdue {
+                        Text(daysOverdue == 1 ? " 1 day overdue" : " \(daysOverdue) days overdue")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    } else if let age = person.turningAge {
                         Text(" Turning \(age)")
                             .font(.subheadline)
                             .foregroundStyle(.secondary)

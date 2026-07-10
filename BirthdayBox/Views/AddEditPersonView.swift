@@ -123,12 +123,16 @@ struct AddEditPersonView: View {
 
     private func save() {
         if let person {
+            let birthdayChanged = person.birthMonth != month || person.birthDay != day
             person.name = name
             person.birthMonth = month
             person.birthDay = day
             person.birthYear = includeYear ? Int(yearString) : nil
             person.emoji = emoji
             person.notes = notes
+            if birthdayChanged {
+                person.resetAcknowledgementForCurrentBirthday()
+            }
         } else {
             let newPerson = Person(
                 name: name,
