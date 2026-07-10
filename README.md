@@ -49,6 +49,10 @@ BirthdayBox/
 - Xcode with iOS 18+ SDK (interactive widget buttons require it)
 - iOS or macOS 18+ device or simulator
 
+## Bugs
+- [ ] Red font is too dark in dark mode
+- [ ] Test out the overdue feature on iOS
+
 ## Features
 
 - [ ] Add Person: Add basic holidays (Mother's Day, Father's Day)
