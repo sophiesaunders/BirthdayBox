@@ -53,18 +53,30 @@ BirthdayBox/
 
 - [ ] Add Person: Add basic holidays (Mother's Day, Father's Day)
 - [ ] Display: Get a reminder ahead of time about an upcoming birthday (maybe optional)
-- [ ] General: Add a color background to the widget? And/or the app? Configurable?
 - [ ] Add lock screen widget functionality
 - [ ] Allow import of birthdays from contacts
 
 ## Testing
 
-- [x] Notifications - morning and night
+- [x] Notifications: morning and night
+- [ ] Notifications: Only after adding a person for the first time
 - [x] Add Person: What if no date is set? -> Has default value, not possible
 - [x] Add Person: What if an invalid date is set? -> Jumps to next legitimate date
 - [x] Add Person: What if no name is set? -> "Save" button is grayed out
 - [x] Today: What if their name is longer than the space allowed?
 - [x] Today: What if their emoji is longer than 1 character, or not an emoji?
-- [ ] Today: What if the "Notes" are longer than the space allowed?
+- [x] Today: What if the "Notes" are longer than the space allowed?
 - [x] Today: 0, 1, 2, 3, 4, etc. birthdays appearance
 - [x] Everyone: Delete a person
+
+## App Store Submission
+
+- [ ] Privacy Policy page on Github - basically a "we don't collect any date" policy
+- [ ] Support information - either an issues page on Github or a contact email
+- [ ] Privacy information: "Data not collected"
+- [ ] Take screenshots on various devices
+- [ ] Set a version number
+- [ ] Test with large accessibility text (Settings -> Accessibility -> Display & Text Size)
+- [ ] Test with VoiceOver: Add accessibility naming e.g. for checkmarks
+- [ ] Test on smallest and largeset devices: iPhone SE, Pro Max, macOS
+- [ ] Test on dark mode and light mode

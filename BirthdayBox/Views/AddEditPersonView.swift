@@ -178,6 +178,7 @@ struct AddEditPersonView: View {
                 notes: notes
             )
             modelContext.insert(newPerson)
+            NotificationManager.requestAuthorizationIfNeeded()
         }
         try? modelContext.save()
         refreshNotifications()

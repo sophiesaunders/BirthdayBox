@@ -12,7 +12,6 @@ struct BirthdayBoxApp: App {
         .modelContainer(PersistenceController.shared)
         .onChange(of: scenePhase) { _, newPhase in
             if newPhase == .active {
-                NotificationManager.requestAuthorizationIfNeeded()
                 refreshEveningReminders()
             }
         }
