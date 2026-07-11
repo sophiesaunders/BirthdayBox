@@ -26,6 +26,9 @@ struct AddEditPersonView: View {
             Form {
                 Section("Person") {
                     TextField("Name", text: $name)
+                        #if os(macOS)
+                        .textFieldStyle(.roundedBorder)
+                        #endif
                     HStack {
                         Text("Emoji")
                         Spacer()
@@ -90,6 +93,9 @@ struct AddEditPersonView: View {
                 Section("Notes") {
                     TextField("e.g. loves handwritten cards", text: $notes, axis: .vertical)
                         .lineLimit(1...4)
+                        #if os(macOS)
+                        .textFieldStyle(.roundedBorder)
+                        #endif
                 }
             }
             .formStyle(.grouped)
