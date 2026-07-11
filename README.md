@@ -49,21 +49,18 @@ BirthdayBox/
 - Xcode with iOS 18+ SDK (interactive widget buttons require it)
 - iOS or macOS 18+ device or simulator
 
-## Bugs
-- [ ] Red font is too dark in dark mode
-- [ ] Test out the overdue feature on iOS
-
 ## Features
 
 - [ ] Add Person: Add basic holidays (Mother's Day, Father's Day)
 - [ ] Display: Get a reminder ahead of time about an upcoming birthday (maybe optional)
-- [ ] Icon: Add dark and tinted modes to the app icon, remove the white border
 - [ ] General: Add a color background to the widget? And/or the app? Configurable?
 - [ ] Emojis: Eliminate the custom emoji picker, figure out another macOS solution
+- [ ] Add lock screen widget functionality
+- [ ] Allow import of birthdays from contacts
 
 ## Testing
 
-- [x] Do notifications work?
+- [x] Notifications - morning and night
 - [x] Add Person: What if no date is set? -> Has default value, not possible
 - [x] Add Person: What if an invalid date is set? -> Jumps to next legitimate date
 - [x] Add Person: What if no name is set? -> "Save" button is grayed out

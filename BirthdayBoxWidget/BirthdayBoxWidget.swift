@@ -69,6 +69,7 @@ struct BirthdayProvider: TimelineProvider {
 
 struct BirthdayBoxWidgetView: View {
     @Environment(\.widgetFamily) private var family
+    @Environment(\.colorScheme) private var colorScheme
     var entry: BirthdayProvider.Entry
 
     /// Fixed per widget size (rather than derived from row height) so name text doesn't grow
@@ -76,7 +77,9 @@ struct BirthdayBoxWidgetView: View {
     static let smallNameFontSize: CGFloat = 15
     static let mediumNameFontSize: CGFloat = 17
 
-    static let overdueColor = Color(red: 0.7, green: 0.0, blue: 0.0)
+    static func overdueColor(for colorScheme: ColorScheme) -> Color {
+        colorScheme == .dark ? Color(red: 1.0, green: 0.35, blue: 0.35) : Color(red: 0.7, green: 0.0, blue: 0.0)
+    }
 
     var body: some View {
         if entry.people.isEmpty {
@@ -140,13 +143,13 @@ struct BirthdayBoxWidgetView: View {
                             .fontWeight(.semibold)
                             .lineLimit(1)
                             .truncationMode(.tail)
-                            .foregroundStyle(person.isOverdue ? BirthdayBoxWidgetView.overdueColor : .primary)
+                            .foregroundStyle(person.isOverdue ? BirthdayBoxWidgetView.overdueColor(for: colorScheme) : .primary)
                             .opacity(person.isAcknowledged ? 0.45 : 1.0)
                         Spacer(minLength: 2)
                         Button(intent: ToggleBirthdayIntent(personID: person.id.uuidString)) {
                             Image(systemName: person.isAcknowledged ? "checkmark.circle.fill" : "circle")
                                 .font(.system(size: 17))
-                                .foregroundStyle(person.isAcknowledged ? .green : (person.isOverdue ? BirthdayBoxWidgetView.overdueColor : .secondary))
+                                .foregroundStyle(person.isAcknowledged ? .green : (person.isOverdue ? BirthdayBoxWidgetView.overdueColor(for: colorScheme) : .secondary))
                         }
                         .buttonStyle(.plain)
                     }
@@ -202,7 +205,7 @@ struct BirthdayBoxWidgetView: View {
                             Text(person.name)
                                 .fontWeight(.semibold)
                                 .lineLimit(1)
-                                .foregroundStyle(person.isOverdue ? BirthdayBoxWidgetView.overdueColor : .primary)
+                                .foregroundStyle(person.isOverdue ? BirthdayBoxWidgetView.overdueColor(for: colorScheme) : .primary)
                             if person.isOverdue, let daysOverdue = person.daysOverdue {
                                 Text(daysOverdue == 1 ? "1 day overdue" : "\(daysOverdue) days overdue")
                                     .foregroundStyle(.secondary)
@@ -218,7 +221,7 @@ struct BirthdayBoxWidgetView: View {
                         Button(intent: ToggleBirthdayIntent(personID: person.id.uuidString)) {
                             Image(systemName: person.isAcknowledged ? "checkmark.circle.fill" : "circle")
                                 .font(.system(size: checkboxSize))
-                                .foregroundStyle(person.isAcknowledged ? .green : (person.isOverdue ? BirthdayBoxWidgetView.overdueColor : .secondary))
+                                .foregroundStyle(person.isAcknowledged ? .green : (person.isOverdue ? BirthdayBoxWidgetView.overdueColor(for: colorScheme) : .secondary))
                         }
                         .buttonStyle(.plain)
                     }

@@ -5,8 +5,11 @@ import WidgetKit
 struct TodayView: View {
     @Query private var people: [Person]
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.colorScheme) private var colorScheme
 
-    static let overdueColor = Color(red: 0.7, green: 0.0, blue: 0.0)
+    static func overdueColor(for colorScheme: ColorScheme) -> Color {
+        colorScheme == .dark ? Color(red: 1.0, green: 0.35, blue: 0.35) : Color(red: 0.7, green: 0.0, blue: 0.0)
+    }
 
     private var todaysPeople: [Person] {
         people.filter { $0.isBirthdayToday }
@@ -52,7 +55,7 @@ struct TodayView: View {
                                 }
                             } header: {
                                 Text("Overdue")
-                                    .foregroundStyle(TodayView.overdueColor)
+                                    .foregroundStyle(TodayView.overdueColor(for: colorScheme))
                             }
                         }
                     }
@@ -77,6 +80,7 @@ struct TodayView: View {
 struct BirthdayRow: View {
     let person: Person
     let onToggle: () -> Void
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         HStack {
@@ -86,7 +90,7 @@ struct BirthdayRow: View {
                 HStack(spacing: 6) {
                     Text(person.name)
                         .font(.headline)
-                        .foregroundStyle(person.isOverdue ? TodayView.overdueColor : .primary)
+                        .foregroundStyle(person.isOverdue ? TodayView.overdueColor(for: colorScheme) : .primary)
                     if person.isOverdue, let daysOverdue = person.daysOverdue {
                         Text(daysOverdue == 1 ? " 1 day overdue" : " \(daysOverdue) days overdue")
                             .font(.subheadline)
