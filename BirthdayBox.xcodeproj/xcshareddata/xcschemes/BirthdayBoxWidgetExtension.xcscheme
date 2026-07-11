@@ -30,7 +30,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "EEC9A3D62FFB2180001D67A2"
-               BuildableName = "BirthdayBox.app"
+               BuildableName = "Birthday Buzz.app"
                ReferencedContainer = "container:BirthdayBox.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -71,7 +71,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "EEC9A3D62FFB2180001D67A2"
-            BuildableName = "BirthdayBox.app"
+            BuildableName = "Birthday Buzz.app"
             ReferencedContainer = "container:BirthdayBox.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -106,7 +106,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "EEC9A3D62FFB2180001D67A2"
-            BuildableName = "BirthdayBox.app"
+            BuildableName = "Birthday Buzz.app"
             ReferencedContainer = "container:BirthdayBox.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

@@ -1,4 +1,4 @@
-# BirthdayBox
+# Birthday Buzz
 
 A birthday reminder app for iOS and macOS with a home-screen widget. Instead of
 just telling you whose birthday it is, it tracks whether you've actually reached
@@ -71,11 +71,7 @@ BirthdayBox/
 
 ## App Store Submission
 
-- [ ] Privacy Policy page on Github - basically a "we don't collect any date" policy
-- [ ] Support information - either an issues page on Github or a contact email
-- [ ] Privacy information: "Data not collected"
 - [ ] Take screenshots on various devices
-- [ ] Set a version number
 - [ ] Test with large accessibility text (Settings -> Accessibility -> Display & Text Size)
 - [ ] Test with VoiceOver: Add accessibility naming e.g. for checkmarks
 - [ ] Test on smallest and largeset devices: iPhone SE, Pro Max, macOS

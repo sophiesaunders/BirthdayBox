@@ -6,11 +6,11 @@ title: Privacy Policy
 
 _Last updated: July 11, 2026_
 
-BirthdayBox does not collect, transmit, or store any personal data on servers of any kind.
+Birthday Buzz does not collect, transmit, or store any personal data on servers of any kind.
 
 ## What data the app uses
 
-BirthdayBox stores the names, birthdays, emoji, and notes you enter entirely **on your own device**, using Apple's local storage frameworks. This data is used only to power the app's own features (reminders, the Today view, and the Home Screen/Lock Screen widget).
+Birthday Buzz stores the names, birthdays, emoji, and notes you enter entirely **on your own device**, using Apple's local storage frameworks. This data is used only to power the app's own features (reminders, the Today view, and the Home Screen/Lock Screen widget).
 
 - No data is sent to us or to any third party.
 - No analytics, tracking, or advertising SDKs are used.
@@ -19,7 +19,7 @@ BirthdayBox stores the names, birthdays, emoji, and notes you enter entirely **o
 
 ## Notifications
 
-If you enable notifications, BirthdayBox schedules local reminders on your device using Apple's notification system. This does not involve sending any data off your device.
+If you enable notifications, Birthday Buzz schedules local reminders on your device using Apple's notification system. This does not involve sending any data off your device.
 
 ## Data deletion
 
