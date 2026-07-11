@@ -16,6 +16,7 @@ struct AddEditPersonView: View {
     @State private var emoji: String = "🎂"
     @State private var notes: String = ""
     @State private var showingEmojiPicker = false
+    @FocusState private var notesFocused: Bool
 
     private let months = Array(1...12)
     private let days = Array(1...31)
@@ -25,10 +26,16 @@ struct AddEditPersonView: View {
         NavigationStack {
             Form {
                 Section("Person") {
+                    #if os(macOS)
+                    LabeledContent("Name") {
+                        TextField("", text: $name)
+                            .textFieldStyle(.roundedBorder)
+                            .multilineTextAlignment(.leading)
+                            .frame(maxWidth: .infinity)
+                    }
+                    #else
                     TextField("Name", text: $name)
-                        #if os(macOS)
-                        .textFieldStyle(.roundedBorder)
-                        #endif
+                    #endif
                     HStack {
                         Text("Emoji")
                         Spacer()
@@ -48,6 +55,7 @@ struct AddEditPersonView: View {
                             .presentationCompactAdaptation(.popover)
                         }
                     }
+                    .padding(.vertical, -6)
                 }
                 Section {
                     #if os(iOS)
@@ -91,11 +99,32 @@ struct AddEditPersonView: View {
                     }
                 }
                 Section("Notes") {
+                    #if os(macOS)
+                    ZStack(alignment: .topLeading) {
+                        if notes.isEmpty {
+                            Text("e.g. loves handwritten cards")
+                                .font(.body)
+                                .foregroundStyle(.secondary)
+                                .padding(.leading, 5)
+                                .allowsHitTesting(false)
+                        }
+                        TextEditor(text: $notes)
+                            .font(.body)
+                            .frame(minHeight: 120)
+                            .scrollContentBackground(.hidden)
+                            .focused($notesFocused)
+                    }
+                    .padding(8)
+                    .background(.quaternary, in: RoundedRectangle(cornerRadius: 8))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8)
+                            .stroke(notesFocused ? Color.accentColor : Color.clear, lineWidth: 2)
+                    )
+                    .listRowInsets(EdgeInsets(top: 4, leading: 4, bottom: 4, trailing: 4))
+                    #else
                     TextField("e.g. loves handwritten cards", text: $notes, axis: .vertical)
                         .lineLimit(1...4)
-                        #if os(macOS)
-                        .textFieldStyle(.roundedBorder)
-                        #endif
+                    #endif
                 }
             }
             .formStyle(.grouped)
