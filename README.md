@@ -54,7 +54,6 @@ BirthdayBox/
 - [ ] Add Person: Add basic holidays (Mother's Day, Father's Day)
 - [ ] Display: Get a reminder ahead of time about an upcoming birthday (maybe optional)
 - [ ] General: Add a color background to the widget? And/or the app? Configurable?
-- [ ] Emojis: Eliminate the custom emoji picker, figure out another macOS solution
 - [ ] Add lock screen widget functionality
 - [ ] Allow import of birthdays from contacts
 
